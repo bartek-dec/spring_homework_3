@@ -11,14 +11,15 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/cars")
+@CrossOrigin
 public class CarApi {
     private List<Car> carList;
 
     public CarApi() {
         this.carList = new ArrayList<>();
-        carList.add(new Car(1L, "Skoda", "Fabia", "silver"));
-        carList.add(new Car(2L, "Seat", "Leon", "yellow"));
-        carList.add(new Car(3L, "Opel", "Astra", "black"));
+        carList.add(new Car(1L, "Skoda", "Fabia", "Silver"));
+        carList.add(new Car(2L, "Seat", "Leon", "Yellow"));
+        carList.add(new Car(3L, "Opel", "Astra", "Black"));
     }
 
     @GetMapping
@@ -46,6 +47,16 @@ public class CarApi {
 
     @PostMapping
     public ResponseEntity addCar(@RequestBody Car car) {
+        Optional<Long> highestId = carList.stream().map(Car::getId).max(Long::compare);
+
+        long nextId;
+        if (highestId.isPresent()) {
+            nextId = highestId.get() + 1;
+        } else {
+            nextId = 1L;
+        }
+        car.setId(nextId);
+
         boolean isAdded = carList.add(car);
 
         if (isAdded) {
@@ -91,10 +102,12 @@ public class CarApi {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity removeCar(long id) {
+    public ResponseEntity removeCar(@PathVariable long id) {
+        System.out.println();
         Optional<Car> carOptional = carList.stream().filter(car -> car.getId() == id).findFirst();
 
         if (carOptional.isPresent()) {
+            carList.remove(carOptional.get());
             return new ResponseEntity(HttpStatus.OK);
         }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
